@@ -4,15 +4,20 @@
 #include <vector>
 #include <cstdint>
 #include <type_traits>
+#include <utility>
+#include <memory>
+#include <tuple>
+
+#include "json_tlv_object.hpp"
 
 #define INTEGRAL_TYPE_TEMPLATE                                                 \
     template<                                                                  \
         class T,                                                               \
-        typename = typename std::enable_if_t<std::is_arithmetic<T>::value, T>  \
+        typename = typename std::enable_if_t<std::is_integral<T>::value, T>    \
     >
 
 INTEGRAL_TYPE_TEMPLATE
-std::vector<uint8_t> serializeNumericValue(T value)
+std::vector<uint8_t> serializeIntegralValue(T value)
 {
     constexpr auto type_size = sizeof(T);
     std::vector<uint8_t> bytes(type_size);
@@ -33,8 +38,8 @@ std::vector<uint8_t> serializeNumericValue(T value)
 }
 
 INTEGRAL_TYPE_TEMPLATE
-static T deserializeNumericValue(std::vector<uint8_t>::const_iterator start,
-                                 std::vector<uint8_t>::const_iterator end)
+T deserializeIntegralValue(std::vector<uint8_t>::const_iterator start,
+                           std::vector<uint8_t>::const_iterator end)
 {
     constexpr auto type_size = sizeof(T);
     // TODO: This should better be an exception
@@ -49,9 +54,15 @@ static T deserializeNumericValue(std::vector<uint8_t>::const_iterator start,
 }
 
 INTEGRAL_TYPE_TEMPLATE
-static T deserializeNumericValue(const std::vector<uint8_t> & bytes)
+T deserializeIntegralValue(const std::vector<uint8_t> & bytes)
 {
-    return deserializeNumericValue<T>(bytes.begin(), bytes.end());
+    return deserializeIntegralValue<T>(bytes.begin(), bytes.end());
 }
+
+JsonTLVObject::ByteArray serializeTLVElement(const JsonTLVObject & tlv_value);
+
+std::pair<std::shared_ptr<JsonTLVObject>, JsonTLVObject::ByteArrayIterator>
+deserializeTLVElement(JsonTLVObject::ByteArrayIterator start,
+                      JsonTLVObject::ByteArrayIterator end);
 
 #endif // SERIALIZATION_HPP

@@ -20,16 +20,18 @@ public:
 
     using JsonTLVValueHolder<T>::JsonTLVValueHolder;
 
-protected:
+    JsonTLVObject::ByteArray serialize() const override;
+
+    void deserialize(const JsonTLVObject::ByteArray & bytes) override;
+
+    void deserialize(JsonTLVObject::ByteArrayIterator start,
+                     JsonTLVObject::ByteArrayIterator end) override;
 
     JsonTLVObject::Tag getTag() const override;
 
-    JsonTLVObject::ByteArray serializeValue() const override;
+    nlohmann::json toJson() const override;
 
-    void deserializeValue(const JsonTLVObject::ByteArray & bytes) override;
-
-    void deserializeValue(JsonTLVObject::ByteArrayIterator start,
-                          JsonTLVObject::ByteArrayIterator end) override;
+protected:
 
     struct TagSelector
     {
@@ -57,26 +59,31 @@ JsonTLVObject::Tag JsonTLVIntegral<T, P>::getTag() const
 }
 
 template<class T, typename P>
-JsonTLVObject::ByteArray JsonTLVIntegral<T, P>::serializeValue() const
+JsonTLVObject::ByteArray JsonTLVIntegral<T, P>::serialize() const
 {
     return this->value == 0
         ? JsonTLVObject::ByteArray()
-        : serializeNumericValue(this->value);
+        : serializeIntegralValue(this->value);
 }
 
 template<class T, typename P>
-void JsonTLVIntegral<T, P>::deserializeValue(
-    const JsonTLVObject::ByteArray & bytes)
+void JsonTLVIntegral<T, P>::deserialize(const JsonTLVObject::ByteArray & bytes)
 {
-    this->value = bytes.empty() ? 0 : deserializeNumericValue<T>(bytes);
+    this->value = bytes.empty() ? 0 : deserializeIntegralValue<T>(bytes);
 }
 
 template<class T, typename P>
-void JsonTLVIntegral<T, P>::deserializeValue(
+void JsonTLVIntegral<T, P>::deserialize(
     JsonTLVObject::ByteArrayIterator start,
     JsonTLVObject::ByteArrayIterator end)
 {
-    this->value = deserializeNumericValue<T>(start, end);
+    this->value = deserializeIntegralValue<T>(start, end);
+}
+
+template<class T, typename P>
+nlohmann::json JsonTLVIntegral<T, P>::toJson() const
+{
+    return nlohmann::json(this->value);
 }
 
 template<class T, typename P>

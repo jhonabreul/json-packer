@@ -11,7 +11,7 @@ int JsonKeyDictionary::insert(const std::string& key)
     return id;
 }
 
-int JsonKeyDictionary::get(const std::string& key)
+int JsonKeyDictionary::get(const std::string& key) const
 {
     return this->dictionary.at(key);
 }

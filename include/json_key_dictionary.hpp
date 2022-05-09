@@ -10,7 +10,7 @@ public:
 
     int insert(const std::string& key);
 
-    int get(const std::string& key);
+    int get(const std::string& key) const;
 
 private:
 

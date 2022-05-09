@@ -38,7 +38,6 @@ TEST_CASE("JSON TLV record", "[tlv-record]")
                 {0xABCDEF, std::make_shared<JsonTLVInt>(0)},
                 {0xABCDEF01, std::make_shared<JsonTLVInt>(0x1A2B3C4D5E)},
             }), std::vector<uint8_t>{
-                // 0x02, // Tag-length byte for record type
                 // START: Key-value pair 1
                     // START: Key (int) 1
                     0x21, // Tag-length byte

@@ -28,10 +28,12 @@ void JsonTLVRecord::deserialize(
     JsonTLVObject::ByteArrayIterator start,
     JsonTLVObject::ByteArrayIterator end)
 {
+    // TODO: Assert that there is an even number of items (key-value)
+
     this->value.clear();
     std::shared_ptr<JsonTLVObject> key, val;
 
-    while (start < end) {
+    while (start != end) {
         std::tie(key, start) = deserializeTLVElement(start, end);
         // TODO: Maybe this should be an exception
         assert(("First element must be the key",

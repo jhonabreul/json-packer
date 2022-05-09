@@ -24,7 +24,7 @@ JsonTLVObject::ByteArray JsonTLVObject::serializeTagAndLength(Tag tag,
         // Long format
         serialized_tag[0] |= 0x10;
         serialized_tag[0] |= serialized_length.size();
-        serialized_tag.insert(serialized_tag.begin(), serialized_length.begin(),
+        serialized_tag.insert(serialized_tag.end(), serialized_length.begin(),
                               serialized_length.end());
     }
 
@@ -47,14 +47,14 @@ JsonTLVObject::deserializeTagAndLength(ByteArrayIterator start,
     Tag tag = static_cast<Tag>(*start >> 5);
     bool length_is_long_format = *start & 0x10;
     size_t length = *start & 0x0F;
-    auto next_it = start + 1;
+    auto next_it = ++start;
 
     if (length_is_long_format) {
         // TODO: Maybe this should be an exception
         assert(end - start >= length + 1);
+        start += length;
         length = deserializeIntegralValue<size_t>(next_it, next_it + length);
-        next_it += length;
     }
 
-    return std::make_tuple(tag, length, next_it);
+    return std::make_tuple(tag, length, start);
 }

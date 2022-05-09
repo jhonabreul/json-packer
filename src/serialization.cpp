@@ -2,11 +2,12 @@
 #include "json_tlv_integral.hpp"
 #include "json_tlv_record.hpp"
 
-JsonTLVObject::ByteArray serializeTLVElement(const JsonTLVObject & tlv_value)
+JsonTLVObject::ByteArray serializeTLVElement(const JsonTLVObject& tlv_value)
 {
     auto value_bytes = tlv_value.serialize();
     auto tag_length_bytes = JsonTLVObject::serializeTagAndLength(
-                                tlv_value.getTag(),value_bytes.size());
+                                tlv_value.getTag(), value_bytes.size());
+
     tag_length_bytes.insert(tag_length_bytes.end(), value_bytes.begin(),
                             value_bytes.end());
 
@@ -27,8 +28,7 @@ deserializeTLVElement(JsonTLVObject::ByteArrayIterator start,
     assert(end - start >= length);
     end = start + length;
 
-    switch (tag)
-    {
+    switch (tag) {
         case JsonTLVObject::Tag::Record:
             tlv_value = std::make_shared<JsonTLVRecord>();
             break;

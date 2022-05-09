@@ -64,11 +64,15 @@ protected:
 
 public:
 
+    using JsonTLVObject::JsonTLVObject;
+
     JsonTLVValueHolder();
 
     JsonTLVValueHolder(const T & _value);
 
     JsonTLVValueHolder(T && _value);
+
+    // TODO: Copy and move constructors
 
     virtual JsonTLVObject::Tag getTag() const override = 0;
 
@@ -91,10 +95,13 @@ template<class T, class EqualTo>
 JsonTLVValueHolder<T, EqualTo>::JsonTLVValueHolder(): value(ValueType()) {}
 
 template<class T, class EqualTo>
-JsonTLVValueHolder<T, EqualTo>::JsonTLVValueHolder(const T & _value): value(_value) {}
+JsonTLVValueHolder<T, EqualTo>::JsonTLVValueHolder(const T & _value)
+    : value(_value)
+{}
 
 template<class T, class EqualTo>
-JsonTLVValueHolder<T, EqualTo>::JsonTLVValueHolder(T && _value): value(std::move(_value))
+JsonTLVValueHolder<T, EqualTo>::JsonTLVValueHolder(T && _value)
+    : value(std::move(_value))
 {}
 
 template<class T, class EqualTo>

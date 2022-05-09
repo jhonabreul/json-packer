@@ -46,7 +46,7 @@ T deserializeIntegralValue(std::vector<uint8_t>::const_iterator start,
     assert(end - start <= type_size);
 
     T value = 0;
-    for (int i = 0; start < end; i++) {
+    for (int i = 0; start != end; i++) {
         value |= (T) *start++ << (i * 8);
     }
 

@@ -8,7 +8,21 @@
 
 #include "json_packer.hpp"
 #include "json_key_dictionary.hpp"
+#include "json_tlv_integral.hpp"
+#include "json_tlv_string.hpp"
+#include "json_tlv_null.hpp"
+#include "json_tlv_float.hpp"
 #include "json_tlv_record.hpp"
+
+template<class T>
+bool compareJsonToTLVRecord(const nlohmann::json& json_value,
+                            const JsonTLVObject& record_value)
+{
+    using ValueType = typename T::ValueType;
+
+    return (json_value.get<ValueType>() ==
+        static_cast<ValueType>(dynamic_cast<const T&>(record_value)));
+}
 
 TEST_CASE("JSON packer", "[json-packer]")
 {
@@ -19,7 +33,9 @@ TEST_CASE("JSON packer", "[json-packer]")
                 "{\"key1\": false,"
                 " \"key2\": 0,"
                 " \"key3\": true,"
-                " \"key4\": 112394521950}",
+                " \"key4\": 112394521950,"
+                " \"key5\": null,"
+                " \"key6\": \"string\"}",
                 /*
                  * NOTE: The order is expected to be the same because nlohmann::json
                  *       uses an std::map to store the json object, so the keys are
@@ -27,7 +43,7 @@ TEST_CASE("JSON packer", "[json-packer]")
                  */
                 std::vector<uint8_t>{
                     0x11, // START: Record tag-length byte(s)
-                    0x12, // END: Record tag-length byte(s)
+                    0x1E, // END: Record tag-length byte(s)
                     0x21, // START: key1 key (int 1)
                     0x01, // END: key1 key (int 1)
                     0x60, // START-END: key1 value (bool false)
@@ -46,6 +62,18 @@ TEST_CASE("JSON packer", "[json-packer]")
                     0x3C,
                     0x2B,
                     0x1A, // END: key4 value (int 112394521950 = 0x1A2B3C4D5E)
+                    0x21, // START: key5 key (int 5)
+                    0x05, // END: key5 key (int 5)
+                    0xA0, // START-END: key5 value (null)
+                    0x21, // START: key6 key (int 6)
+                    0x06, // END: key6 key (int 6)
+                    0x86, // START: key6 value (string "string")
+                    's',
+                    't',
+                    'r',
+                    'i',
+                    'n',
+                    'g', // END: key6 value (string "string")
                 }));
 
         SECTION("Should pack a single record")
@@ -84,13 +112,24 @@ TEST_CASE("JSON packer", "[json-packer]")
 
                             switch (record_value->getTag()) {
                                 case JsonTLVObject::Tag::Integer:
-                                    return (json_value.get<JsonTLVInt::ValueType>() ==
-                                        dynamic_cast<JsonTLVInt&>(*record_value));
+                                    return compareJsonToTLVRecord<JsonTLVInt>(
+                                        json_value, *record_value);
 
                                 case JsonTLVObject::Tag::Boolean:
-                                    return (
-                                        json_value.get<JsonTLVBoolean::ValueType>() ==
-                                            dynamic_cast<JsonTLVBoolean&>(*record_value));
+                                    return compareJsonToTLVRecord<JsonTLVBoolean>(
+                                        json_value, *record_value);
+
+                                case JsonTLVObject::Tag::String:
+                                    return compareJsonToTLVRecord<JsonTLVString>(
+                                        json_value, *record_value);
+
+                                case JsonTLVObject::Tag::Null:
+                                    return compareJsonToTLVRecord<JsonTLVNull>(
+                                        json_value, *record_value);
+
+                                case JsonTLVObject::Tag::Float:
+                                    return compareJsonToTLVRecord<JsonTLVFloat>(
+                                        json_value, *record_value);
 
                                 // TODO: Do nothing in default case after all tags are
                                 //       implemented

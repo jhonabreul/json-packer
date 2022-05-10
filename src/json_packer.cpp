@@ -8,6 +8,9 @@
 
 #include "json_tlv_object.hpp"
 #include "json_tlv_integral.hpp"
+#include "json_tlv_string.hpp"
+#include "json_tlv_null.hpp"
+#include "json_tlv_float.hpp"
 #include "json_tlv_record.hpp"
 #include "serialization.hpp"
 
@@ -38,8 +41,17 @@ JsonTLVObject::ByteArray JsonPacker::packLine(const std::string & line,
         } else if (value.is_boolean()) {
             tlv_element = std::make_shared<JsonTLVBoolean>(
                             value.get<JsonTLVBoolean::ValueType>());
+        } else if (value.is_string()) {
+            tlv_element = std::make_shared<JsonTLVString>(
+                            value.get<JsonTLVString::ValueType>());
+        } else if (value.is_null()) {
+            tlv_element = std::make_shared<JsonTLVNull>();
+        } else if (value.is_number_float()) {
+            tlv_element = std::make_shared<JsonTLVFloat>(
+                            value.get<JsonTLVFloat::ValueType>());
         } else {
-            assert(("Unimplemented data type", false));
+            assert(("A JSON record line can only contain simple type values",
+                    false));
         }
 
         record_map.emplace(key_id, std::move(tlv_element));

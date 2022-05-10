@@ -1,5 +1,8 @@
 #include "serialization.hpp"
 #include "json_tlv_integral.hpp"
+#include "json_tlv_string.hpp"
+#include "json_tlv_null.hpp"
+#include "json_tlv_float.hpp"
 #include "json_tlv_record.hpp"
 
 JsonTLVObject::ByteArray serializeTLVElement(const JsonTLVObject& tlv_value)
@@ -41,9 +44,21 @@ deserializeTLVElement(JsonTLVObject::ByteArrayIterator start,
             tlv_value = std::make_shared<JsonTLVBoolean>();
             break;
 
+        case JsonTLVObject::Tag::String:
+            tlv_value = std::make_shared<JsonTLVString>();
+            break;
+
+        case JsonTLVObject::Tag::Null:
+            tlv_value = std::make_shared<JsonTLVNull>();
+            break;
+
+        case JsonTLVObject::Tag::Float:
+            tlv_value = std::make_shared<JsonTLVFloat>();
+            break;
+
         // TODO: Do nothing in default case after all tags are implemented
         default:
-            assert(("Unimplemented tag", false));
+            assert(("Invalid tag found", false));
             break;
     }
 

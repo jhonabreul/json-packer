@@ -4,12 +4,14 @@ add_library(json_packer_lib
     "${PROJECT_SOURCE_DIR}/include/json_tlv_object.hpp"
     "${PROJECT_SOURCE_DIR}/include/json_tlv_integral.hpp"
     "${PROJECT_SOURCE_DIR}/include/json_tlv_string.hpp"
+    "${PROJECT_SOURCE_DIR}/include/json_tlv_null.hpp"
     "${PROJECT_SOURCE_DIR}/include/json_tlv_record.hpp"
     "${PROJECT_SOURCE_DIR}/include/serialization.hpp"
     json_packer.cpp
     json_key_dictionary.cpp
     json_tlv_object.cpp
     json_tlv_string.cpp
+    json_tlv_null.cpp
     json_tlv_record.cpp
     serialization.cpp
 )

@@ -7,6 +7,7 @@ add_executable(json_packer_test
 	json_tlv_integral_test.cpp
 	json_tlv_string_test.cpp
 	json_tlv_null_test.cpp
+	json_tlv_float_test.cpp
 	json_tlv_record_test.cpp
 	json_packer_test.cpp
 )

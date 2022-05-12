@@ -14,7 +14,7 @@ void JsonTLVNull::deserialize(JsonTLVObject::ByteArrayIterator start,
                               JsonTLVObject::ByteArrayIterator end)
 {
     // TODO: Maybe this should be an exeption
-    assert(end- start == 0);
+    assert(end - start == 0);
 }
 
 JsonTLVObject::Tag JsonTLVNull::getTag() const

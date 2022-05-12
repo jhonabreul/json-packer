@@ -7,6 +7,7 @@
 #include <functional>
 #include <utility>
 #include <memory>
+#include <iostream>
 
 #include <nlohmann/json.hpp>
 

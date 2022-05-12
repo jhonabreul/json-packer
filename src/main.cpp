@@ -38,17 +38,29 @@ auto parseArguments(int argc, char *argv[])
         }
     }
 
+
+    if (args.output_filename.empty()) {
+        std::cerr << "The output filename is mandatory.\n";
+        exit(EXIT_FAILURE);
+    }
+
     return args;
 }
 
 template<typename T>
-T openStream(const std::string & filename)
+T openStream(const std::string & filename, bool binary = false)
 {
     if (filename.empty()) {
         return T();
     }
 
-    T stream(filename);
+    T stream;
+
+    if (binary) {
+        stream.open(filename, std::ios_base::binary);
+    } else {
+        stream.open(filename);
+    }
 
     if (!stream) {
         std::cerr << "Input file " << filename
@@ -64,7 +76,8 @@ int main(int argc, char *argv[])
     Arguments args = parseArguments(argc, argv);
 
     auto in = openStream<std::ifstream>(args.input_filename);
-    auto out = openStream<std::ofstream>(args.output_filename);
+    auto out = openStream<std::ofstream>(args.output_filename, true);
 
-    JsonPacker::pack(in.is_open() ? in : std::cin, out.is_open() ? out : std::cout);
+    JsonPacker::pack(in.is_open() ? in : std::cin,
+                     out.is_open() ? out : std::cout);
 }

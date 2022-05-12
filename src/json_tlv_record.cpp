@@ -9,6 +9,10 @@ JsonTLVObject::ByteArray JsonTLVRecord::serialize() const
         auto key = element.first;
         auto& val = element.second;
 
+        if (!val) {
+            continue;
+        }
+
         auto key_bytes = serializeTLVElement(JsonTLVInt(key));
         auto val_bytes = serializeTLVElement(*val);
         bytes.insert(bytes.end(), key_bytes.begin(), key_bytes.end());
@@ -60,4 +64,9 @@ nlohmann::json JsonTLVRecord::toJson() const
     }
 
     return json;
+}
+
+Record::mapped_type & JsonTLVRecord::operator [](const Record::key_type & key)
+{
+    return this->value[key];
 }

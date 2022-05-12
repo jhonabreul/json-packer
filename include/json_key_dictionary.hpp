@@ -8,13 +8,17 @@ class JsonKeyDictionary
 {
 public:
 
+    using Dictionary = std::unordered_map<std::string, int>;
+
     int insert(const std::string& key);
 
     int get(const std::string& key) const;
 
+    const Dictionary & getDictionary() const;
+
 private:
 
-    std::unordered_map<std::string, int> dictionary;
+    Dictionary dictionary;
 
     int next_id = 1;
 };

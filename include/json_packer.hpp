@@ -3,7 +3,7 @@
 
 #include <map>
 #include <vector>
-#include <istream>
+#include <iostream>
 #include <cstdint>
 #include <string>
 #include <memory>
@@ -22,6 +22,8 @@ public:
 
     static JsonTLVObject::ByteArray packLine(const std::string & line,
                                              JsonKeyDictionary & dictionary);
+
+    static void unpack(std::istream& in, std::ostream& out);
 
     static std::shared_ptr<JsonTLVObject> unpackLine(
         JsonTLVObject::ByteArrayIterator start,

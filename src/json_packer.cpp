@@ -16,19 +16,38 @@
 
 void JsonPacker::pack(std::istream& in, std::ostream& out)
 {
+    if (!in or !out or (in.flags() & std::ios_base::binary) or
+        !(out.flags() & std::ios_base::binary)) {
+        // TODO: This should the an exception
+        assert(!in or !out or (in.flags() & std::ios_base::binary) or
+               !(out.flags() & std::ios_base::binary));
+    }
+
     JsonKeyDictionary dictionary;
     std::string line;
 
     while (std::getline(in, line)) {
-        JsonPacker::packLine(line, dictionary);
+        auto bytes = JsonPacker::packLine(line, dictionary);
+        out.write(reinterpret_cast<char *>(bytes.data()), bytes.size());
     }
+
+    JsonTLVRecord tlv_dictionary;
+
+    for (auto & dict_pair: dictionary.getDictionary()) {
+        tlv_dictionary[dict_pair.second] =
+            std::make_shared<JsonTLVString>(dict_pair.first);
+    }
+
+    auto serialized_dictionary = serializeTLVElement(tlv_dictionary);
+    out.write(reinterpret_cast<char *>(serialized_dictionary.data()),
+              serialized_dictionary.size());
 }
 
 JsonTLVObject::ByteArray JsonPacker::packLine(const std::string & line,
                                               JsonKeyDictionary & dictionary)
 {
     auto json = nlohmann::json::parse(line); // TODO: Handle parse errors
-    JsonTLVRecord::ValueType record_map;
+    JsonTLVRecord record;
     std::shared_ptr<JsonTLVObject> tlv_element;
 
     for (auto& element: json.items()) {
@@ -54,10 +73,22 @@ JsonTLVObject::ByteArray JsonPacker::packLine(const std::string & line,
                     false));
         }
 
-        record_map.emplace(key_id, std::move(tlv_element));
+        record[key_id] = std::move(tlv_element);
     }
 
-    return serializeTLVElement(JsonTLVRecord(std::move(record_map)));
+    return serializeTLVElement(record);
+}
+
+void JsonPacker::unpack(std::istream& in, std::ostream& out)
+{
+    if (!in or !out or !(in.flags() & std::ios_base::binary) or
+        (out.flags() & std::ios_base::binary)) {
+        // TODO: This should the an exception
+        assert(!in or !out or !(in.flags() & std::ios_base::binary) or
+               (out.flags() & std::ios_base::binary));
+    }
+
+
 }
 
 std::shared_ptr<JsonTLVObject> JsonPacker::unpackLine(

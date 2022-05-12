@@ -48,6 +48,8 @@ public:
     Tag getTag() const override;
 
     nlohmann::json toJson() const override;
+
+    Record::mapped_type & operator [](const Record::key_type & key);
 };
 
 #endif // JSON_TLV_RECORD_HPP

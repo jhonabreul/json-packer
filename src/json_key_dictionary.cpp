@@ -15,3 +15,8 @@ int JsonKeyDictionary::get(const std::string& key) const
 {
     return this->dictionary.at(key);
 }
+
+const JsonKeyDictionary::Dictionary & JsonKeyDictionary::getDictionary() const
+{
+    return this->dictionary;
+}

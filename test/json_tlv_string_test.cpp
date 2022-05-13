@@ -23,12 +23,10 @@ TEST_CASE("JSON TLV string", "[tlv-string]")
     SECTION("Should deserialize empty array to \"\"")
     {
         JsonTLVString deserialized_value("not empty");
-        REQUIRE_FALSE(
-            static_cast<JsonTLVString::ValueType>(deserialized_value).empty());
+        REQUIRE_FALSE(deserialized_value.getValue().empty());
 
         deserialized_value.deserialize({});
-        REQUIRE(
-            static_cast<JsonTLVString::ValueType>(deserialized_value).empty());
+        REQUIRE(deserialized_value.getValue().empty());
     }
 
     auto test_pair = GENERATE(

@@ -11,13 +11,11 @@
 
 #include <nlohmann/json.hpp>
 
+#include "binary_stream.hpp"
+
 class JsonTLVObject
 {
 public:
-
-    using Byte = uint8_t;
-    using ByteArray = std::vector<uint8_t>;
-    using ByteArrayIterator = std::vector<uint8_t>::const_iterator;
 
     enum class Tag: uint8_t
     {
@@ -46,11 +44,16 @@ public:
 
     static ByteArray serializeTagAndLength(Tag tag, size_t length);
 
+    static void serializeTagAndLength(Tag tag, size_t length,
+                                      BinaryOutputStream & out);
+
     static std::tuple<Tag, size_t, ByteArrayIterator>
     deserializeTagAndLength(const ByteArray & bytes);
 
     static std::tuple<Tag, size_t, ByteArrayIterator>
     deserializeTagAndLength(ByteArrayIterator start, ByteArrayIterator end);
+
+    static std::pair<Tag, size_t> deserializeTagAndLength(BinaryInputStream & in);
 };
 
 template<class T, class EqualTo = std::equal_to<T>>
@@ -89,6 +92,8 @@ public:
     operator const T&();
     operator T() const;
 
+    const T & getValue() const;
+
     bool equalTo(const JsonTLVObject & other) const override;
 };
 
@@ -113,6 +118,12 @@ JsonTLVValueHolder<T, EqualTo>::operator const T&()
 
 template<class T, class EqualTo>
 JsonTLVValueHolder<T, EqualTo>::operator T() const
+{
+    return this->value;
+}
+
+template<class T, class EqualTo>
+const T & JsonTLVValueHolder<T, EqualTo>::getValue() const
 {
     return this->value;
 }

@@ -1,17 +1,16 @@
 #include "json_tlv_float.hpp"
 
-JsonTLVObject::ByteArray JsonTLVFloat::serialize() const
+ByteArray JsonTLVFloat::serialize() const
 {
     return nlohmann::json::to_cbor(this->value);
 }
 
-void JsonTLVFloat::deserialize(const JsonTLVObject::ByteArray & bytes)
+void JsonTLVFloat::deserialize(const ByteArray & bytes)
 {
     return this->deserialize(bytes.begin(), bytes.end());
 }
 
-void JsonTLVFloat::deserialize(JsonTLVObject::ByteArrayIterator start,
-                               JsonTLVObject::ByteArrayIterator end)
+void JsonTLVFloat::deserialize(ByteArrayIterator start, ByteArrayIterator end)
 {
     this->value = nlohmann::json::from_cbor(start, end).get<ValueType>();
 }

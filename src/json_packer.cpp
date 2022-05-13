@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <utility>
+#include <list>
 
 #include <nlohmann/json.hpp>
 
@@ -23,12 +24,12 @@ void JsonPacker::pack(std::istream& in, std::ostream& out)
                !(out.flags() & std::ios_base::binary));
     }
 
+    BinaryOutputStream output(out);
     JsonKeyDictionary dictionary;
     std::string line;
 
     while (std::getline(in, line)) {
-        auto bytes = JsonPacker::packLine(line, dictionary);
-        out.write(reinterpret_cast<char *>(bytes.data()), bytes.size());
+        output.write(JsonPacker::packLine(line, dictionary));
     }
 
     JsonTLVRecord tlv_dictionary;
@@ -38,13 +39,11 @@ void JsonPacker::pack(std::istream& in, std::ostream& out)
             std::make_shared<JsonTLVString>(dict_pair.first);
     }
 
-    auto serialized_dictionary = serializeTLVElement(tlv_dictionary);
-    out.write(reinterpret_cast<char *>(serialized_dictionary.data()),
-              serialized_dictionary.size());
+    output.write(serializeTLVElement(tlv_dictionary));
 }
 
-JsonTLVObject::ByteArray JsonPacker::packLine(const std::string & line,
-                                              JsonKeyDictionary & dictionary)
+ByteArray JsonPacker::packLine(const std::string & line,
+                               JsonKeyDictionary & dictionary)
 {
     auto json = nlohmann::json::parse(line); // TODO: Handle parse errors
     JsonTLVRecord record;
@@ -79,6 +78,66 @@ JsonTLVObject::ByteArray JsonPacker::packLine(const std::string & line,
     return serializeTLVElement(record);
 }
 
+nlohmann::json recordToJson(const JsonTLVRecord & record,
+                            JsonTLVRecord & dictionary)
+{
+    nlohmann::json json_record;
+    auto & record_map = record.getValue();
+
+    for (auto & item: record_map) {
+        auto id = item.first;
+        auto & key = dynamic_cast<JsonTLVString &>(*dictionary[id]).getValue();
+
+        switch (item.second->getTag()) {
+            case JsonTLVObject::Tag::Integer:
+                json_record[key] =
+                    dynamic_cast<JsonTLVInt &>(*item.second).getValue();
+                break;
+
+            case JsonTLVObject::Tag::Boolean:
+                json_record[key] =
+                    dynamic_cast<JsonTLVBoolean &>(*item.second).getValue();
+                break;
+
+            case JsonTLVObject::Tag::String:
+                json_record[key] =
+                    dynamic_cast<JsonTLVString &>(*item.second).getValue();
+                break;
+
+            case JsonTLVObject::Tag::Null:
+                json_record[key] =
+                    dynamic_cast<JsonTLVNull &>(*item.second).getValue();
+                break;
+
+            case JsonTLVObject::Tag::Float:
+                json_record[key] =
+                    dynamic_cast<JsonTLVFloat &>(*item.second).getValue();
+                break;
+
+            // TODO: Do nothing in default case after all tags are implemented
+            default:
+                assert(("Invalid tag found", false));
+                break;
+        }
+    }
+
+    return json_record;
+}
+
+nlohmann::json dictionaryToJson(JsonTLVRecord & dictionary)
+{
+    nlohmann::json json_record;
+
+    for (auto & item: dictionary.getValue()) {
+        auto id = item.first;
+        auto & key = dynamic_cast<JsonTLVString &>(*dictionary[id]).getValue();
+        json_record[key] =
+            dynamic_cast<JsonTLVString &>(*item.second).getValue();
+    }
+
+    return json_record;
+}
+
 void JsonPacker::unpack(std::istream& in, std::ostream& out)
 {
     if (!in or !out or !(in.flags() & std::ios_base::binary) or
@@ -88,12 +147,46 @@ void JsonPacker::unpack(std::istream& in, std::ostream& out)
                (out.flags() & std::ios_base::binary));
     }
 
+    std::list<std::shared_ptr<JsonTLVObject>> tlv_elements;
 
+    BinaryInputStream input(in);
+    in.seekg(0, in.end);
+    auto length = in.tellg();
+    in.seekg (0, in.beg);
+
+    while (!in or in.tellg() < length) {
+        try {
+            tlv_elements.push_back(deserializeTLVElement(input));
+        } catch (std::exception & e) {
+            // TODO: Break more gracefully
+            assert(("File is malformed", false));
+        }
+    }
+
+    if (tlv_elements.size() == 1) {
+        // TODO: Break more gracefully
+        assert(("File is incomplete, no dictionary found", false));
+    }
+
+    try {
+        auto tlv_dictionary =
+            dynamic_cast<JsonTLVRecord&>(*tlv_elements.back());
+        tlv_elements.pop_back();
+
+        for (auto & tlv_element: tlv_elements) {
+            out << recordToJson(dynamic_cast<JsonTLVRecord&>(*tlv_element),
+                                tlv_dictionary)
+                << '\n';
+        }
+
+        // out << dictionaryToJson(tlv_dictionary) << '\n';
+    } catch (std::bad_cast) {
+        assert(false);
+    }
 }
 
-std::shared_ptr<JsonTLVObject> JsonPacker::unpackLine(
-    JsonTLVObject::ByteArrayIterator start,
-    JsonTLVObject::ByteArrayIterator end)
+std::shared_ptr<JsonTLVObject> JsonPacker::unpackLine(ByteArrayIterator start,
+                                                      ByteArrayIterator end)
 {
     return deserializeTLVElement(start, end).first;
 }

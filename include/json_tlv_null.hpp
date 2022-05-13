@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 
 #include "json_tlv_object.hpp"
+#include "binary_stream.hpp"
 
 class JsonTLVNull: public JsonTLVValueHolder<std::nullptr_t>
 {

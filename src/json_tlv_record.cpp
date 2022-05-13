@@ -1,9 +1,9 @@
 #include "json_tlv_record.hpp"
 #include "serialization.hpp"
 
-JsonTLVObject::ByteArray JsonTLVRecord::serialize() const
+ByteArray JsonTLVRecord::serialize() const
 {
-    JsonTLVObject::ByteArray bytes;
+    ByteArray bytes;
 
     for (auto& element: this->value) {
         auto key = element.first;
@@ -22,15 +22,12 @@ JsonTLVObject::ByteArray JsonTLVRecord::serialize() const
     return bytes;
 }
 
-void JsonTLVRecord::deserialize(
-    const JsonTLVObject::ByteArray & bytes)
+void JsonTLVRecord::deserialize(const ByteArray & bytes)
 {
     return this->deserialize(bytes.begin(), bytes.end());
 }
 
-void JsonTLVRecord::deserialize(
-    JsonTLVObject::ByteArrayIterator start,
-    JsonTLVObject::ByteArrayIterator end)
+void JsonTLVRecord::deserialize(ByteArrayIterator start, ByteArrayIterator end)
 {
     // TODO: Assert that there is an even number of items (key-value)
 

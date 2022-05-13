@@ -5,6 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "binary_stream.hpp"
 #include "json_tlv_object.hpp"
 
 class JsonTLVString: public JsonTLVValueHolder<std::string>

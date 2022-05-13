@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 
 #include "json_tlv_object.hpp"
+#include "binary_stream.hpp"
 
 class JsonTLVFloat: public JsonTLVValueHolder<long double>
 {

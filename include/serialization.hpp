@@ -9,6 +9,7 @@
 #include <tuple>
 
 #include "json_tlv_object.hpp"
+#include "binary_stream.hpp"
 
 #define INTEGRAL_TYPE_TEMPLATE                                                 \
     template<                                                                  \
@@ -59,10 +60,14 @@ T deserializeIntegralValue(const std::vector<uint8_t> & bytes)
     return deserializeIntegralValue<T>(bytes.begin(), bytes.end());
 }
 
-JsonTLVObject::ByteArray serializeTLVElement(const JsonTLVObject & tlv_value);
+ByteArray serializeTLVElement(const JsonTLVObject & tlv_value);
 
-std::pair<std::shared_ptr<JsonTLVObject>, JsonTLVObject::ByteArrayIterator>
-deserializeTLVElement(JsonTLVObject::ByteArrayIterator start,
-                      JsonTLVObject::ByteArrayIterator end);
+void serializeTLVElement(const JsonTLVObject & tlv_value,
+                         BinaryOutputStream & out);
+
+std::pair<std::shared_ptr<JsonTLVObject>, ByteArrayIterator>
+deserializeTLVElement(ByteArrayIterator start, ByteArrayIterator end);
+
+std::shared_ptr<JsonTLVObject> deserializeTLVElement(BinaryInputStream & in);
 
 #endif // SERIALIZATION_HPP

@@ -10,6 +10,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "binary_stream.hpp"
 #include "json_key_dictionary.hpp"
 #include "json_tlv_object.hpp"
 #include "json_tlv_record.hpp"
@@ -20,17 +21,13 @@ public:
 
     static void pack(std::istream& in, std::ostream& out);
 
-    static JsonTLVObject::ByteArray packLine(const std::string & line,
-                                             JsonKeyDictionary & dictionary);
+    static ByteArray packLine(const std::string & line,
+                              JsonKeyDictionary & dictionary);
 
     static void unpack(std::istream& in, std::ostream& out);
 
-    static std::shared_ptr<JsonTLVObject> unpackLine(
-        JsonTLVObject::ByteArrayIterator start,
-        JsonTLVObject::ByteArrayIterator end);
-
-    // static std::string unpackRecord(const JsonTLVRecord & record,
-    //                                 JsonKeyDictionary & dictionary);
+    static std::shared_ptr<JsonTLVObject> unpackLine(ByteArrayIterator start,
+                                                     ByteArrayIterator end);
 };
 
 #endif // JSON_PACKER_HPP

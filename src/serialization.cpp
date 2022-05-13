@@ -5,7 +5,7 @@
 #include "json_tlv_float.hpp"
 #include "json_tlv_record.hpp"
 
-JsonTLVObject::ByteArray serializeTLVElement(const JsonTLVObject& tlv_value)
+ByteArray serializeTLVElement(const JsonTLVObject& tlv_value)
 {
     auto value_bytes = tlv_value.serialize();
     auto tag_length_bytes = JsonTLVObject::serializeTagAndLength(
@@ -17,9 +17,14 @@ JsonTLVObject::ByteArray serializeTLVElement(const JsonTLVObject& tlv_value)
     return tag_length_bytes;
 }
 
-std::pair<std::shared_ptr<JsonTLVObject>, JsonTLVObject::ByteArrayIterator>
-deserializeTLVElement(JsonTLVObject::ByteArrayIterator start,
-                      JsonTLVObject::ByteArrayIterator end)
+void serializeTLVElement(const JsonTLVObject & tlv_value,
+                         BinaryOutputStream & out)
+{
+    out.write(serializeTLVElement(tlv_value));
+}
+
+std::pair<std::shared_ptr<JsonTLVObject>, ByteArrayIterator>
+deserializeTLVElement(ByteArrayIterator start, ByteArrayIterator end)
 {
     JsonTLVObject::Tag tag;
     size_t length;
@@ -65,4 +70,48 @@ deserializeTLVElement(JsonTLVObject::ByteArrayIterator start,
     tlv_value->deserialize(start, end);
 
     return std::make_pair(tlv_value, end);
+}
+
+std::shared_ptr<JsonTLVObject> deserializeTLVElement(BinaryInputStream & in)
+{
+    JsonTLVObject::Tag tag;
+    size_t length;
+    std::shared_ptr<JsonTLVObject> tlv_value;
+
+    std::tie(tag, length) = JsonTLVObject::deserializeTagAndLength(in);
+
+    switch (tag) {
+        case JsonTLVObject::Tag::Record:
+            tlv_value = std::make_shared<JsonTLVRecord>();
+            break;
+
+        case JsonTLVObject::Tag::Integer:
+            tlv_value = std::make_shared<JsonTLVInt>();
+            break;
+
+        case JsonTLVObject::Tag::Boolean:
+            tlv_value = std::make_shared<JsonTLVBoolean>();
+            break;
+
+        case JsonTLVObject::Tag::String:
+            tlv_value = std::make_shared<JsonTLVString>();
+            break;
+
+        case JsonTLVObject::Tag::Null:
+            tlv_value = std::make_shared<JsonTLVNull>();
+            break;
+
+        case JsonTLVObject::Tag::Float:
+            tlv_value = std::make_shared<JsonTLVFloat>();
+            break;
+
+        // TODO: Do nothing in default case after all tags are implemented
+        default:
+            assert(("Invalid tag found", false));
+            break;
+    }
+
+    tlv_value->deserialize(in.read(length));
+
+    return tlv_value;
 }

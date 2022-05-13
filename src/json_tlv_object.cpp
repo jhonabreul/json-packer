@@ -7,8 +7,7 @@ bool JsonTLVObject::equalTo(const JsonTLVObject & other) const
     return this == &other;
 }
 
-JsonTLVObject::ByteArray JsonTLVObject::serializeTagAndLength(Tag tag,
-                                                              size_t length)
+ByteArray JsonTLVObject::serializeTagAndLength(Tag tag, size_t length)
 {
     auto serialized_length = serializeIntegralValue(length);
     assert(serialized_length.size() <= 0x0F);
@@ -31,13 +30,19 @@ JsonTLVObject::ByteArray JsonTLVObject::serializeTagAndLength(Tag tag,
     return serialized_tag;
 }
 
-std::tuple<JsonTLVObject::Tag, size_t, JsonTLVObject::ByteArrayIterator>
-JsonTLVObject::deserializeTagAndLength(const JsonTLVObject::ByteArray & bytes)
+void JsonTLVObject::serializeTagAndLength(Tag tag, size_t length,
+                                          BinaryOutputStream & out)
+{
+    out.write(serializeTagAndLength(tag, length));
+}
+
+std::tuple<JsonTLVObject::Tag, size_t, ByteArrayIterator>
+JsonTLVObject::deserializeTagAndLength(const ByteArray & bytes)
 {
     return JsonTLVObject::deserializeTagAndLength(bytes.begin(), bytes.end());
 }
 
-std::tuple<JsonTLVObject::Tag, size_t, JsonTLVObject::ByteArrayIterator>
+std::tuple<JsonTLVObject::Tag, size_t, ByteArrayIterator>
 JsonTLVObject::deserializeTagAndLength(ByteArrayIterator start,
                                        ByteArrayIterator end)
 {
@@ -57,4 +62,20 @@ JsonTLVObject::deserializeTagAndLength(ByteArrayIterator start,
     }
 
     return std::make_tuple(tag, length, start);
+}
+
+std::pair<JsonTLVObject::Tag, size_t> JsonTLVObject::deserializeTagAndLength(
+    BinaryInputStream & in)
+{
+    ByteArray bytes = in.read(sizeof(Byte));
+    Tag tag = static_cast<Tag>(bytes[0] >> 5);
+    bool length_is_long_format = bytes[0] & 0x10;
+    size_t length = bytes[0] & 0x0F;
+
+    if (length_is_long_format) {
+        // TODO: Handle read exception
+        length = deserializeIntegralValue<size_t>(in.read(length * sizeof(Byte)));
+    }
+
+    return std::make_pair(tag, length);
 }

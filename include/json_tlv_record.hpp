@@ -10,6 +10,7 @@
 
 #include "json_tlv_object.hpp"
 #include "json_tlv_integral.hpp"
+#include "binary_stream.hpp"
 
 using Record = std::map<long long, std::shared_ptr<JsonTLVObject>>;
 

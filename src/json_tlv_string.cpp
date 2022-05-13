@@ -1,17 +1,16 @@
 #include "json_tlv_string.hpp"
 
-JsonTLVObject::ByteArray JsonTLVString::serialize() const
+ByteArray JsonTLVString::serialize() const
 {
-    return JsonTLVObject::ByteArray(this->value.begin(), this->value.end());
+    return ByteArray(this->value.begin(), this->value.end());
 }
 
-void JsonTLVString::deserialize(const JsonTLVObject::ByteArray & bytes)
+void JsonTLVString::deserialize(const ByteArray & bytes)
 {
     return this->deserialize(bytes.begin(), bytes.end());
 }
 
-void JsonTLVString::deserialize(JsonTLVObject::ByteArrayIterator start,
-                                JsonTLVObject::ByteArrayIterator end)
+void JsonTLVString::deserialize(ByteArrayIterator start, ByteArrayIterator end)
 {
     this->value = std::string(start, end);
 }

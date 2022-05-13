@@ -21,7 +21,7 @@ bool compareJsonToTLVRecord(const nlohmann::json& json_value,
     using ValueType = typename T::ValueType;
 
     return (json_value.get<ValueType>() ==
-        static_cast<ValueType>(dynamic_cast<const T&>(record_value)));
+        dynamic_cast<const T&>(record_value).getValue());
 }
 
 TEST_CASE("JSON packer", "[json-packer]")
@@ -95,9 +95,7 @@ TEST_CASE("JSON packer", "[json-packer]")
 
             REQUIRE(record->getTag() == JsonTLVObject::Tag::Record);
 
-            auto& record_map =
-                static_cast<const JsonTLVRecord::ValueType&>(
-                    dynamic_cast<JsonTLVRecord&>(*record));
+            auto& record_map = dynamic_cast<JsonTLVRecord&>(*record).getValue();
             auto record_it = record_map.begin();
 
             REQUIRE(record_map.size() == json_record.size());
@@ -142,6 +140,58 @@ TEST_CASE("JSON packer", "[json-packer]")
                         return false;
                     },
                     "Record and JSON item values must be the same"));
+        }
+
+        SECTION("Should pack and unpack a file")
+        {
+            std::string in_filename = "test/test_data/test_data1.txt";
+            std::string out_filename = "/tmp/test_data.bin";
+            std::string unpacked_filename = "/tmp/unpacked_test_data.txt";
+            std::ifstream in(in_filename);
+            std::ofstream out(out_filename, std::ios::binary);
+
+            REQUIRE(in);
+            REQUIRE(out);
+
+            JsonPacker::pack(in, out);
+            in.close();
+            out.close();
+
+
+            in.open(out_filename, std::ios::binary);
+            out.open(unpacked_filename);
+
+            REQUIRE(in);
+            REQUIRE(out);
+
+            JsonPacker::unpack(in, out);
+            in.close();
+            out.close();
+
+            std::ifstream original_data_in(in_filename);
+            std::ifstream unpacked_data_in(unpacked_filename);
+            std::string original_line, unpacked_line;
+            int i = 1;
+
+            REQUIRE((original_data_in && unpacked_data_in));
+
+            while (true) {
+                std::getline(original_data_in, original_line);
+                std::getline(unpacked_data_in, unpacked_line);
+
+                if (!original_data_in || !unpacked_data_in) {
+                    break;
+                }
+
+                SECTION("Records should match for line " + std::to_string(i++))
+                {
+                    REQUIRE(nlohmann::json::parse(original_line) ==
+                                nlohmann::json::parse(unpacked_line));
+                }
+            }
+
+            REQUIRE(!original_data_in);
+            REQUIRE(!unpacked_data_in);
         }
     }
 }

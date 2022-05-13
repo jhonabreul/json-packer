@@ -9,6 +9,7 @@
 
 #include "json_tlv_object.hpp"
 #include "serialization.hpp"
+#include "binary_stream.hpp"
 
 template<
     class T,
@@ -20,12 +21,11 @@ public:
 
     using JsonTLVValueHolder<T>::JsonTLVValueHolder;
 
-    JsonTLVObject::ByteArray serialize() const override;
+    ByteArray serialize() const override;
 
-    void deserialize(const JsonTLVObject::ByteArray & bytes) override;
+    void deserialize(const ByteArray & bytes) override;
 
-    void deserialize(JsonTLVObject::ByteArrayIterator start,
-                     JsonTLVObject::ByteArrayIterator end) override;
+    void deserialize(ByteArrayIterator start, ByteArrayIterator end) override;
 
     JsonTLVObject::Tag getTag() const override;
 
@@ -59,23 +59,20 @@ JsonTLVObject::Tag JsonTLVIntegral<T, P>::getTag() const
 }
 
 template<class T, typename P>
-JsonTLVObject::ByteArray JsonTLVIntegral<T, P>::serialize() const
+ByteArray JsonTLVIntegral<T, P>::serialize() const
 {
-    return this->value == 0
-        ? JsonTLVObject::ByteArray()
-        : serializeIntegralValue(this->value);
+    return this->value == 0 ? ByteArray() : serializeIntegralValue(this->value);
 }
 
 template<class T, typename P>
-void JsonTLVIntegral<T, P>::deserialize(const JsonTLVObject::ByteArray & bytes)
+void JsonTLVIntegral<T, P>::deserialize(const ByteArray & bytes)
 {
     this->value = bytes.empty() ? 0 : deserializeIntegralValue<T>(bytes);
 }
 
 template<class T, typename P>
-void JsonTLVIntegral<T, P>::deserialize(
-    JsonTLVObject::ByteArrayIterator start,
-    JsonTLVObject::ByteArrayIterator end)
+void JsonTLVIntegral<T, P>::deserialize(ByteArrayIterator start,
+                                        ByteArrayIterator end)
 {
     this->value = deserializeIntegralValue<T>(start, end);
 }

@@ -1,0 +1,2 @@
+{"key1": false, "key2": 0, "key3": true, "key4": 112394521950, "key5": null, "key6": "string", "key7": 251.22336, "key8": 0.0}
+{"key1": true, "key2": 56, "key3": null, "key4": false, "key5": "HOLA gfjngt kifdg dkjgnm mf gkfg", "key6": 0.000005, "key7": 251.22336, "key8": 88888888.0}

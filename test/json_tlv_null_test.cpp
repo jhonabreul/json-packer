@@ -15,7 +15,7 @@ TEST_CASE("JSON TLV null", "[tlv-null]")
     }
     SECTION("Should always be null")
     {
-        REQUIRE(static_cast<JsonTLVNull::ValueType>(JsonTLVNull()) == nullptr);
+        REQUIRE(JsonTLVNull().getValue() == nullptr);
     }
 
     SECTION("Should always serialize to empty array")

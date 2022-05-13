@@ -9,6 +9,7 @@ struct Arguments
 {
     std::string input_filename;
     std::string output_filename;
+    bool unpack = false;
 };
 
 auto parseArguments(int argc, char *argv[])
@@ -16,7 +17,7 @@ auto parseArguments(int argc, char *argv[])
     Arguments args;
     int opt;
 
-    while ((opt = getopt(argc, argv, "i:o:h")) != -1) {
+    while ((opt = getopt(argc, argv, "i:o:uh")) != -1) {
         switch (opt) {
         case 'i':
             args.input_filename = optarg;
@@ -24,6 +25,10 @@ auto parseArguments(int argc, char *argv[])
 
         case 'o':
             args.output_filename = optarg;
+            break;
+
+        case 'u':
+            args.unpack = true;
             break;
 
         case 'h':
@@ -74,10 +79,16 @@ T openStream(const std::string & filename, bool binary = false)
 int main(int argc, char *argv[])
 {
     Arguments args = parseArguments(argc, argv);
+    std::ifstream in;
+    std::ofstream out;
 
-    auto in = openStream<std::ifstream>(args.input_filename);
-    auto out = openStream<std::ofstream>(args.output_filename, true);
-
-    JsonPacker::pack(in.is_open() ? in : std::cin,
-                     out.is_open() ? out : std::cout);
+    if (args.unpack) {
+        in = openStream<std::ifstream>(args.input_filename, true);
+        out = openStream<std::ofstream>(args.output_filename);
+        JsonPacker::unpack(in, out);
+    } else {
+        in = openStream<std::ifstream>(args.input_filename);
+        out = openStream<std::ofstream>(args.output_filename, true);
+        JsonPacker::pack(in, out);
+    }
 }

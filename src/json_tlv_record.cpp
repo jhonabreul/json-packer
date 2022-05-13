@@ -1,3 +1,5 @@
+#include <exception>
+
 #include "json_tlv_record.hpp"
 #include "serialization.hpp"
 
@@ -29,22 +31,29 @@ void JsonTLVRecord::deserialize(const ByteArray & bytes)
 
 void JsonTLVRecord::deserialize(ByteArrayIterator start, ByteArrayIterator end)
 {
-    // TODO: Assert that there is an even number of items (key-value)
-
     this->value.clear();
+    const auto length = end - start;
     std::shared_ptr<JsonTLVObject> key, val;
 
     while (start != end) {
         std::tie(key, start) = deserializeTLVElement(start, end);
-        // TODO: Maybe this should be an exception
-        assert(("First element must be the key",
-                key->getTag() == Tag::Integer));
+
+        if (key->getTag() != Tag::Integer) {
+            throw std::domain_error("The first element of a packed record "
+                                    "value must be an integer (the key)");
+        }
+
         std::tie(val, start) = deserializeTLVElement(start, end);
         this->value[dynamic_cast<JsonTLVInt&>(*key)] = std::move(val);
     }
 
-    // TODO: Maybe this should be an exception
-    assert(("The whole array [start, end) must have been read", start == end));
+    if (start != end) {
+        throw std::domain_error(
+            std::to_string(length) +
+            " bytes were received to deserialize a record but only " +
+            std::to_string(length - (end  - start)) +
+            " were read");
+    }
 }
 
 JsonTLVObject::Tag JsonTLVRecord::getTag() const

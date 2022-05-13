@@ -19,12 +19,12 @@ class JsonPacker
 {
 public:
 
-    static void pack(std::istream& in, std::ostream& out);
+    static void pack(std::istream & in, std::ostream & out);
 
     static ByteArray packLine(const std::string & line,
                               JsonKeyDictionary & dictionary);
 
-    static void unpack(std::istream& in, std::ostream& out);
+    static void unpack(std::istream & in, std::ostream & out);
 
     static std::shared_ptr<JsonTLVObject> unpackLine(ByteArrayIterator start,
                                                      ByteArrayIterator end);

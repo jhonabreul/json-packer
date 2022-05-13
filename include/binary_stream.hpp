@@ -5,9 +5,9 @@
 #include <vector>
 #include <cstddef>
 #include <utility>
-#include <cassert>
 #include <algorithm>
-#include <fstream>
+#include <iostream>
+#include <exception>
 
 using Byte = uint8_t;
 using ByteArray = std::vector<Byte>;
@@ -39,10 +39,10 @@ public:
     ByteArray read(size_t n_bytes)
     {
         ByteArray bytes(n_bytes);
+
         if (!this->stream.read(reinterpret_cast<char *>(bytes.data()),
                                n_bytes * sizeof(Byte))) {
-            // TODO: Throw exception
-            assert(("Buffer does not have enough bytes to read", false));
+            throw std::out_of_range("Buffer does not have enough bytes to read");
         }
 
         return bytes;

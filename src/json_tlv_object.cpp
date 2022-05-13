@@ -1,5 +1,6 @@
-#include "json_tlv_object.hpp"
+#include <exception>
 
+#include "json_tlv_object.hpp"
 #include "serialization.hpp"
 
 bool JsonTLVObject::equalTo(const JsonTLVObject & other) const
@@ -10,9 +11,17 @@ bool JsonTLVObject::equalTo(const JsonTLVObject & other) const
 ByteArray JsonTLVObject::serializeTagAndLength(Tag tag, size_t length)
 {
     auto serialized_length = serializeIntegralValue(length);
-    assert(serialized_length.size() <= 0x0F);
+
+    if (serialized_length.size() > 0x0F) {
+        throw std::domain_error("Element length cannot be serialized");
+    }
+
     auto serialized_tag = serializeIntegralValue(static_cast<uint8_t>(tag));
-    assert(serialized_tag.size() == 1);
+
+    if (serialized_tag.size() != 1) {
+        throw std::domain_error(
+            "Tag size must be one byte, could not be serialized");
+    }
 
     serialized_tag[0] <<= 5;
 
@@ -46,8 +55,9 @@ std::tuple<JsonTLVObject::Tag, size_t, ByteArrayIterator>
 JsonTLVObject::deserializeTagAndLength(ByteArrayIterator start,
                                        ByteArrayIterator end)
 {
-    // TODO: Maybe this should be an exception
-    assert(end - start > 0);
+    if (start == end) {
+        throw std::length_error("Not enought bytes to deserialize tag and length");
+    }
 
     Tag tag = static_cast<Tag>(*start >> 5);
     bool length_is_long_format = *start & 0x10;
@@ -55,8 +65,10 @@ JsonTLVObject::deserializeTagAndLength(ByteArrayIterator start,
     auto next_it = ++start;
 
     if (length_is_long_format) {
-        // TODO: Maybe this should be an exception
-        assert(end - start >= length + 1);
+        if (end - start < length + 1) {
+            throw std::length_error("Not enought bytes to deserialize length");
+        }
+
         start += length;
         length = deserializeIntegralValue<size_t>(next_it, next_it + length);
     }
@@ -73,7 +85,6 @@ std::pair<JsonTLVObject::Tag, size_t> JsonTLVObject::deserializeTagAndLength(
     size_t length = bytes[0] & 0x0F;
 
     if (length_is_long_format) {
-        // TODO: Handle read exception
         length = deserializeIntegralValue<size_t>(in.read(length * sizeof(Byte)));
     }
 

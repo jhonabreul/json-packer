@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <algorithm>
+#include <fstream>
 
 #include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
@@ -129,10 +130,7 @@ TEST_CASE("JSON packer", "[json-packer]")
                                     return compareJsonToTLVRecord<JsonTLVFloat>(
                                         json_value, *record_value);
 
-                                // TODO: Do nothing in default case after all tags are
-                                //       implemented
                                 default:
-                                    // assert(("Unimplemented tag", false));
                                     break;
                             }
                         }
@@ -144,9 +142,9 @@ TEST_CASE("JSON packer", "[json-packer]")
 
         SECTION("Should pack and unpack a file")
         {
-            std::string in_filename = "test/test_data/test_data1.txt";
-            std::string out_filename = "/tmp/test_data.bin";
-            std::string unpacked_filename = "/tmp/unpacked_test_data.txt";
+            const std::string in_filename = "test/test_data/test_data1.txt";
+            const std::string out_filename = "/tmp/test_data.bin";
+            const std::string unpacked_filename = "/tmp/unpacked_test_data.txt";
             std::ifstream in(in_filename);
             std::ofstream out(out_filename, std::ios::binary);
 

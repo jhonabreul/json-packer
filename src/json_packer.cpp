@@ -4,6 +4,7 @@
 #include <memory>
 #include <utility>
 #include <list>
+#include <exception>
 
 #include <nlohmann/json.hpp>
 
@@ -15,13 +16,10 @@
 #include "json_tlv_record.hpp"
 #include "serialization.hpp"
 
-void JsonPacker::pack(std::istream& in, std::ostream& out)
+void JsonPacker::pack(std::istream & in, std::ostream & out)
 {
-    if (!in or !out or (in.flags() & std::ios_base::binary) or
-        !(out.flags() & std::ios_base::binary)) {
-        // TODO: This should the an exception
-        assert(!in or !out or (in.flags() & std::ios_base::binary) or
-               !(out.flags() & std::ios_base::binary));
+    if (!in or !out) {
+        throw std::invalid_argument("Both input and output streams must be valid");
     }
 
     BinaryOutputStream output(out);
@@ -45,7 +43,7 @@ void JsonPacker::pack(std::istream& in, std::ostream& out)
 ByteArray JsonPacker::packLine(const std::string & line,
                                JsonKeyDictionary & dictionary)
 {
-    auto json = nlohmann::json::parse(line); // TODO: Handle parse errors
+    auto json = nlohmann::json::parse(line);
     JsonTLVRecord record;
     std::shared_ptr<JsonTLVObject> tlv_element;
 
@@ -68,8 +66,8 @@ ByteArray JsonPacker::packLine(const std::string & line,
             tlv_element = std::make_shared<JsonTLVFloat>(
                             value.get<JsonTLVFloat::ValueType>());
         } else {
-            assert(("A JSON record line can only contain simple type values",
-                    false));
+            throw std::domain_error(
+                "A JSON record line can only contain simple type values");
         }
 
         record[key_id] = std::move(tlv_element);
@@ -114,10 +112,8 @@ nlohmann::json recordToJson(const JsonTLVRecord & record,
                     dynamic_cast<JsonTLVFloat &>(*item.second).getValue();
                 break;
 
-            // TODO: Do nothing in default case after all tags are implemented
             default:
-                assert(("Invalid tag found", false));
-                break;
+                throw std::domain_error("Invalid tag found");
         }
     }
 
@@ -138,13 +134,10 @@ nlohmann::json dictionaryToJson(JsonTLVRecord & dictionary)
     return json_record;
 }
 
-void JsonPacker::unpack(std::istream& in, std::ostream& out)
+void JsonPacker::unpack(std::istream & in, std::ostream & out)
 {
-    if (!in or !out or !(in.flags() & std::ios_base::binary) or
-        (out.flags() & std::ios_base::binary)) {
-        // TODO: This should the an exception
-        assert(!in or !out or !(in.flags() & std::ios_base::binary) or
-               (out.flags() & std::ios_base::binary));
+     if (!in or !out) {
+        throw std::invalid_argument("Both input and output streams must be valid");
     }
 
     std::list<std::shared_ptr<JsonTLVObject>> tlv_elements;
@@ -155,17 +148,12 @@ void JsonPacker::unpack(std::istream& in, std::ostream& out)
     in.seekg (0, in.beg);
 
     while (!in or in.tellg() < length) {
-        try {
-            tlv_elements.push_back(deserializeTLVElement(input));
-        } catch (std::exception & e) {
-            // TODO: Break more gracefully
-            assert(("File is malformed", false));
-        }
+        tlv_elements.push_back(deserializeTLVElement(input));
     }
 
     if (tlv_elements.size() == 1) {
-        // TODO: Break more gracefully
-        assert(("File is incomplete, no dictionary found", false));
+        throw std::length_error("A packed file must have at least two "
+                                "records, inluding the dictionary");
     }
 
     try {
@@ -178,10 +166,9 @@ void JsonPacker::unpack(std::istream& in, std::ostream& out)
                                 tlv_dictionary)
                 << '\n';
         }
-
-        // out << dictionaryToJson(tlv_dictionary) << '\n';
     } catch (std::bad_cast) {
-        assert(false);
+        throw std::domain_error("Each element in the binary file must be a "
+                                "json record");
     }
 }
 

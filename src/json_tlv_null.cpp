@@ -12,8 +12,12 @@ void JsonTLVNull::deserialize(const ByteArray & bytes)
 
 void JsonTLVNull::deserialize(ByteArrayIterator start, ByteArrayIterator end)
 {
-    // TODO: Maybe this should be an exeption
-    assert(end - start == 0);
+    if (end - start > 0) {
+        throw std::invalid_argument(
+            "A null value is represented wihtout bytes and " +
+            std::to_string(end - start) +
+            " were received to deserialize");
+    }
 }
 
 JsonTLVObject::Tag JsonTLVNull::getTag() const

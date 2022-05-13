@@ -32,8 +32,11 @@ deserializeTLVElement(ByteArrayIterator start, ByteArrayIterator end)
 
     std::tie(tag, length, start) = JsonTLVObject::deserializeTagAndLength(start,
                                                                           end);
-    // TODO: Maybe this should be an exception
-    assert(end - start >= length);
+
+    if (end - start < length) {
+        throw std::out_of_range("Not enough bytes to deserialize the element");
+    }
+
     end = start + length;
 
     switch (tag) {
@@ -61,10 +64,8 @@ deserializeTLVElement(ByteArrayIterator start, ByteArrayIterator end)
             tlv_value = std::make_shared<JsonTLVFloat>();
             break;
 
-        // TODO: Do nothing in default case after all tags are implemented
         default:
-            assert(("Invalid tag found", false));
-            break;
+            throw std::out_of_range("Invalid tag found");
     }
 
     tlv_value->deserialize(start, end);
@@ -105,10 +106,8 @@ std::shared_ptr<JsonTLVObject> deserializeTLVElement(BinaryInputStream & in)
             tlv_value = std::make_shared<JsonTLVFloat>();
             break;
 
-        // TODO: Do nothing in default case after all tags are implemented
         default:
-            assert(("Invalid tag found", false));
-            break;
+            throw std::out_of_range("Invalid tag found");
     }
 
     tlv_value->deserialize(in.read(length));

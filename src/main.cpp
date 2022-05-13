@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <unistd.h>
+#include <exception>
 
 #include "json_packer.hpp"
 
@@ -82,13 +83,18 @@ int main(int argc, char *argv[])
     std::ifstream in;
     std::ofstream out;
 
-    if (args.unpack) {
-        in = openStream<std::ifstream>(args.input_filename, true);
-        out = openStream<std::ofstream>(args.output_filename);
-        JsonPacker::unpack(in, out);
-    } else {
-        in = openStream<std::ifstream>(args.input_filename);
-        out = openStream<std::ofstream>(args.output_filename, true);
-        JsonPacker::pack(in, out);
+    try {
+        if (args.unpack) {
+            in = openStream<std::ifstream>(args.input_filename, true);
+            out = openStream<std::ofstream>(args.output_filename);
+            JsonPacker::unpack(in, out);
+        } else {
+            in = openStream<std::ifstream>(args.input_filename);
+            out = openStream<std::ofstream>(args.output_filename, true);
+            JsonPacker::pack(in, out);
+        }
+    } catch (const std::exception & e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        exit(EXIT_FAILURE);
     }
 }

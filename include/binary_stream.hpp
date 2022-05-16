@@ -13,6 +13,10 @@ using Byte = uint8_t;
 using ByteArray = std::vector<Byte>;
 using ByteArrayIterator = ByteArray::const_iterator;
 
+/**
+ * @brief
+ *
+ */
 class BinaryOutputStream
 {
     std::ostream & stream;

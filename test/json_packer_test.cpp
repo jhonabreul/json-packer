@@ -3,6 +3,8 @@
 #include <string>
 #include <algorithm>
 #include <fstream>
+#include <sstream>
+#include <cstdio>
 
 #include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
@@ -142,42 +144,45 @@ TEST_CASE("JSON packer", "[json-packer]")
 
         SECTION("Should pack and unpack a file")
         {
-            const std::string in_filename = "test/test_data/test_data1.txt";
-            const std::string out_filename = "/tmp/test_data.bin";
-            const std::string unpacked_filename = "/tmp/unpacked_test_data.txt";
-            std::ifstream in(in_filename);
-            std::ofstream out(out_filename, std::ios::binary);
+            const std::string binary_out_filename = "test_data.bin";
 
-            REQUIRE(in);
-            REQUIRE(out);
+            std::stringstream original_in(
+                "{\"key1\": false, \"key2\": 0, \"key3\": true, \"key4\": 112394521950, \"key5\": null, \"key6\": \"string\", \"key7\": 251.22336, \"key8\": 0.0}\n"
+                "{\"key1\": true, \"key2\": 56, \"key3\": null, \"key4\": false, \"key5\": \"HOLA gfjngt kifdg dkjgnm mf gkfg\", \"key6\": 0.000005, \"key7\": 251.22336, \"key8\": 88888888.0}\n");
+            std::ofstream binary_packed_out(binary_out_filename,
+                                            std::ios::binary);
 
-            JsonPacker::pack(in, out);
-            in.close();
-            out.close();
+            REQUIRE(original_in);
+            REQUIRE(binary_packed_out);
 
+            JsonPacker::pack(original_in, binary_packed_out);
+            binary_packed_out.close();
 
-            in.open(out_filename, std::ios::binary);
-            out.open(unpacked_filename);
+            std::ifstream binary_packed_in(binary_out_filename,
+                                           std::ios::binary);
+            std::stringstream unpacked_stream;
 
-            REQUIRE(in);
-            REQUIRE(out);
+            REQUIRE(binary_packed_in);
+            REQUIRE(binary_packed_out);
 
-            JsonPacker::unpack(in, out);
-            in.close();
-            out.close();
+            JsonPacker::unpack(binary_packed_in, unpacked_stream);
+            binary_packed_in.close();
+            unpacked_stream.clear();
+            unpacked_stream.seekg(0);
+            original_in.clear();
+            original_in.seekg(0);
 
-            std::ifstream original_data_in(in_filename);
-            std::ifstream unpacked_data_in(unpacked_filename);
             std::string original_line, unpacked_line;
             int i = 1;
 
-            REQUIRE((original_data_in && unpacked_data_in));
+            REQUIRE(original_in);
+            REQUIRE(unpacked_stream);
 
             while (true) {
-                std::getline(original_data_in, original_line);
-                std::getline(unpacked_data_in, unpacked_line);
+                std::getline(original_in, original_line);
+                std::getline(unpacked_stream, unpacked_line);
 
-                if (!original_data_in || !unpacked_data_in) {
+                if (!original_in || !unpacked_stream) {
                     break;
                 }
 
@@ -188,8 +193,9 @@ TEST_CASE("JSON packer", "[json-packer]")
                 }
             }
 
-            REQUIRE(!original_data_in);
-            REQUIRE(!unpacked_data_in);
+            REQUIRE(!original_in);
+            REQUIRE(!unpacked_stream);
+            std::remove(binary_out_filename.c_str());
         }
     }
 }

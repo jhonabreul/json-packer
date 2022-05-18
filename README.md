@@ -1,5 +1,40 @@
 # JSON Packer
 
+## Building
+
+```sh
+$ mkdir build && cd build
+$ cmake -DJP_BUILD_TESTS=ON ..
+$ make
+$ cd ..
+```
+
+## Rnning tests
+
+```sh
+$ ./build/bin/json_packer_tests
+```
+
+## Rnning command line program
+
+### Help
+
+```sh
+$ ./build/bin/json_packer -h
+```
+
+### Pack
+
+```sh
+$ ./build/bin/json_packer -i input.txt -o output.bin
+```
+
+### Unpack
+
+```sh
+$ ./build/bin/json_packer -u -i input.bin -o output.txt
+```
+
 ## Encoding format
 
 ### Tag
